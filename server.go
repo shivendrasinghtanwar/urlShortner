@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"net/http"
-
-	//"go.mongodb.org/mongo-driver/bson"
+	
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -18,10 +16,6 @@ func main() {
 
 	mux := http.NewServeMux()
     mux.HandleFunc("/url/shorten",shortenUrl)
-
-	connectToMongo()
-
-
 
 	log.Printf("listening on port 5000")
     err := http.ListenAndServe(":5000", mux)
@@ -60,9 +54,7 @@ func connectToMongo() *mongo.Client{
 	return client
 }
 
-type reqBody struct {
-	LongUrl string `json:"longUrl"`
-}
+
 
 
 func shortenUrl(w http.ResponseWriter, req *http.Request) {
@@ -114,20 +106,20 @@ func getShortUrl(longUrl string) string {
 
 	var client = connectToMongo()
 	var verr = client.Ping(context.TODO(), nil)
-	collection := client.Database("BillteTest").Collection("invoices")
-
-	findOptions := options.Find()
-	cur, merr := collection.Find(context.TODO(), bson.D{{}}, findOptions)
-	if merr != nil {
-		log.Fatal(merr)
-	}
-
-	for cur.Next(context.TODO()){
-		fmt.Println(cur)
-	}
 	if verr != nil {
 		log.Fatal(verr)
+		return ""
 	}
+
+	var newRec = Record{longUrl,"xxxxxx"}
+	insertCollection := client.Database("BillteTest").Collection("shortUrls")
+	insertResult, err := insertCollection.InsertOne(context.TODO(), newRec)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
+	fmt.Println("Inserted a single document: ", insertResult.InsertedID)
 
 
 	return ""
