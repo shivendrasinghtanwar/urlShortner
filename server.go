@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"net/http"
 
@@ -13,11 +14,13 @@ import (
 )
 
 
-
 func main() {
 
 	mux := http.NewServeMux()
     mux.HandleFunc("/url/shorten",shortenUrl)
+
+	connectToMongo()
+
 
 
 	log.Printf("listening on port 5000")
@@ -26,15 +29,19 @@ func main() {
     	panic(err)
 	}
 
-    connectToMongo()
+
 }
 
-func connectToMongo(){
+func connectToMongo() *mongo.Client{
 	// Set client options
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Connect to MongoDB
-	client, err := mongo.Connect(context.TODO(), clientOptions)
+	err = client.Connect(context.TODO())
 
 	if err != nil {
 		log.Fatal(err)
@@ -47,9 +54,10 @@ func connectToMongo(){
 		log.Fatal(err)
 	}
 
-	fmt.Println("Connected to MongoDB!")
-	collection := client.Database("test").Collection("trainers")
 
+	fmt.Println("Connected to MongoDB!")
+
+	return client
 }
 
 type reqBody struct {
@@ -102,5 +110,25 @@ func shortenUrl(w http.ResponseWriter, req *http.Request) {
 
 func getShortUrl(longUrl string) string {
 	//collection := client.Database("test").Collection("trainers")
+	// Check the connection
+
+	var client = connectToMongo()
+	var verr = client.Ping(context.TODO(), nil)
+	collection := client.Database("BillteTest").Collection("invoices")
+
+	findOptions := options.Find()
+	cur, merr := collection.Find(context.TODO(), bson.D{{}}, findOptions)
+	if merr != nil {
+		log.Fatal(merr)
+	}
+
+	for cur.Next(context.TODO()){
+		fmt.Println(cur)
+	}
+	if verr != nil {
+		log.Fatal(verr)
+	}
+
+
 	return ""
 }
