@@ -6,16 +6,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	
+	//"io/ioutil"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-
+var client = connectToMongo()
+var shortUrlsCollection = client.Database("BillteTest").Collection("shortUrls")
+var startHash = "AAAAAA"
 func main() {
 
 	mux := http.NewServeMux()
-    mux.HandleFunc("/url/shorten",shortenUrl)
+    mux.HandleFunc("/url/shorten",shortenUrlHandler)
 
 	log.Printf("listening on port 5000")
     err := http.ListenAndServe(":5000", mux)
@@ -57,7 +60,7 @@ func connectToMongo() *mongo.Client{
 
 
 
-func shortenUrl(w http.ResponseWriter, req *http.Request) {
+func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method == "POST" {
 
 		if req.Body == nil {
@@ -82,10 +85,11 @@ func shortenUrl(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		getShortUrl(body.LongUrl)
+		var res = resBody{
+			ShortUrl:generateShortUrl(body.LongUrl),
+		}
 
-		fmt.Println(body.LongUrl)
-		res,objErr := json.Marshal(body)
+		jsonRes,objErr := json.Marshal(res)
 		if objErr != nil {
 			http.Error(w, "Marshalling Failed", http.StatusInternalServerError)
 			return
@@ -93,34 +97,85 @@ func shortenUrl(w http.ResponseWriter, req *http.Request) {
 
 		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write(res)
+		w.Write(jsonRes)
 
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
 }
 
-func getShortUrl(longUrl string) string {
-	//collection := client.Database("test").Collection("trainers")
-	// Check the connection
+func generateShortUrl(longUrl string) string {
 
-	var client = connectToMongo()
 	var verr = client.Ping(context.TODO(), nil)
 	if verr != nil {
 		log.Fatal(verr)
-		return ""
+		return "no"
 	}
 
-	var newRec = Record{longUrl,"xxxxxx"}
-	insertCollection := client.Database("BillteTest").Collection("shortUrls")
-	insertResult, err := insertCollection.InsertOne(context.TODO(), newRec)
-	if err != nil {
-		log.Fatal(err)
+	var hash = genereateHash()
+	var query = mongoQuery{
+		hash,
+	}
+	cur, err1 := shortUrlsCollection.Find(context.TODO(), query)
+	if err1 != nil {
+		log.Fatal(err1.Error())
+		return "no"
 	}
 
+	var results []*Record
+	for cur.Next(context.TODO()) {
 
-	fmt.Println("Inserted a single document: ", insertResult.InsertedID)
+		// create a value into which the single document can be decoded
+		var elem Record
+		err := cur.Decode(&elem)
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		results = append(results, &elem)
+	}
+
+	cur.Close(context.TODO())
+
+	fmt.Println(len(results))
+
+	for len(results)>0{
+		fmt.Println("here")
+		hash = genereateHash()
+		cur, err1 := shortUrlsCollection.Find(context.TODO(), query)
+		if err1 != nil {
+			log.Fatal(err1.Error())
+			return "no"
+		}
+		for cur.Next(context.TODO()) {
+
+			// create a value into which the single document can be decoded
+			var elem Record
+			err := cur.Decode(&elem)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			results = append(results, &elem)
+		}
+
+		cur.Close(context.TODO())
+	}
+
+	return hash
+}
+
+func genereateHash() string {
+	/*file, _ := ioutil.ReadFile("test.json")
+
+	data := CatlogNodes{}
+
+	_ = json.Unmarshal([]byte(file), &data)
+
+	for i := 0; i < len(data.CatlogNodes); i++ {
+		fmt.Println("Product Id: ", data.CatlogNodes[i].Product_id)
+		fmt.Println("Quantity: ", data.CatlogNodes[i].Quantity)
+	}*/
 
 	return ""
 }
