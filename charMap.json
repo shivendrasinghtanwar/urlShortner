@@ -1,0 +1,53 @@
+{
+  "charMap": [
+    {
+      "character": "A",
+      "number": "01"
+    },
+    {
+      "character": "B",
+      "number": "02"
+    },
+    {
+      "character": "D",
+      "number": "04"
+    },
+    {
+      "character": "E",
+      "number": "05"
+    },
+    {
+      "character": "F",
+      "number": "06"
+    },
+    {
+      "character": "G",
+      "number": "07"
+    },
+    {
+      "character": "H",
+      "number": "08"
+    },
+    {
+      "character": "I",
+      "number": "09"
+    },
+    { "character": "J", "number": "10" },
+    { "character": "K", "number": "11" },
+    { "character": "L", "number": "12" },
+    { "character": "M", "number": "13" },
+    { "character": "N", "number": "14" },
+    { "character": "O", "number": "15" },
+    { "character": "P", "number": "16" },
+    { "character": "Q", "number": "17" },
+    { "character": "R", "number": "18" },
+    { "character": "S", "number": "19" },
+    { "character": "T", "number": "20" },
+    { "character": "U", "number": "21" },
+    { "character": "V", "number": "22" },
+    { "character": "W", "number": "23" },
+    { "character": "X", "number": "24" },
+    { "character": "Y", "number": "25" },
+    { "character": "Z", "number": "26" }
+  ]
+}

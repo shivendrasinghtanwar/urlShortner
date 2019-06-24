@@ -4,21 +4,28 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
+
 	//"io/ioutil"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	//"go.mongodb.org/mongo-driver/mongo"
+	//"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var client = connectToMongo()
 var shortUrlsCollection = client.Database("BillteTest").Collection("shortUrls")
-var startHash = "AAAAAA"
+
 func main() {
 
 	mux := http.NewServeMux()
     mux.HandleFunc("/url/shorten",shortenUrlHandler)
+	mux.HandleFunc("/url/test",testHandler)
+
 
 	log.Printf("listening on port 5000")
     err := http.ListenAndServe(":5000", mux)
@@ -29,36 +36,10 @@ func main() {
 
 }
 
-func connectToMongo() *mongo.Client{
-	// Set client options
-
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Connect to MongoDB
-	err = client.Connect(context.TODO())
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-
-	fmt.Println("Connected to MongoDB!")
-
-	return client
+func testHandler(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("here")
+	//genereateHash()
 }
-
-
-
 
 func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method == "POST" {
@@ -85,7 +66,9 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		var res = resBody{
+		fmt.Println(body.LongUrl)
+
+		res := resBody{
 			ShortUrl:generateShortUrl(body.LongUrl),
 		}
 
@@ -97,7 +80,11 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 
 		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write(jsonRes)
+		_,rerr := w.Write(jsonRes)
+		if rerr !=nil {
+			fmt.Println(rerr)
+		}
+
 
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -112,70 +99,134 @@ func generateShortUrl(longUrl string) string {
 		return "no"
 	}
 
-	var hash = genereateHash()
-	var query = mongoQuery{
-		hash,
-	}
-	cur, err1 := shortUrlsCollection.Find(context.TODO(), query)
+
+	cur,err1 := shortUrlsCollection.Find(context.TODO(), bson.D{{}})
 	if err1 != nil {
-		log.Fatal(err1.Error())
-		return "no"
-	}
-
-	var results []*Record
-	for cur.Next(context.TODO()) {
-
-		// create a value into which the single document can be decoded
-		var elem Record
-		err := cur.Decode(&elem)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		results = append(results, &elem)
-	}
-
-	cur.Close(context.TODO())
-
-	fmt.Println(len(results))
-
-	for len(results)>0{
-		fmt.Println("here")
-		hash = genereateHash()
-		cur, err1 := shortUrlsCollection.Find(context.TODO(), query)
-		if err1 != nil {
-			log.Fatal(err1.Error())
-			return "no"
-		}
-		for cur.Next(context.TODO()) {
-
-			// create a value into which the single document can be decoded
+		fmt.Println(err1)
+		return ""
+	}else {
+		var scur = cur
+		if scur.Next(context.TODO()) {
+			var results []*Record
+			var maxElm Record
 			var elem Record
-			err := cur.Decode(&elem)
+
+			err := cur.Decode(&maxElm)
 			if err != nil {
 				log.Fatal(err)
 			}
+			for cur.Next(context.TODO()) {
 
-			results = append(results, &elem)
+				fmt.Println("got here2")
+				err := cur.Decode(&elem)
+				if err != nil {
+					log.Fatal(err)
+				}
+				intMaxElm,ierr1 := strconv.ParseInt(maxElm.HashGen,10,64)
+				if ierr1 != nil {
+					fmt.Println(ierr1)
+				}
+
+				intElem,ierr2 := strconv.ParseInt(elem.HashGen,10,64)
+				if ierr2 != nil {
+					fmt.Println(ierr2)
+				}
+
+				fmt.Println("got here")
+				fmt.Print(intMaxElm)
+				fmt.Print("   ")
+				fmt.Println(intElem)
+
+				if intMaxElm < intElem {
+					maxElm = elem
+				}
+
+				results = append(results, &elem)
+			}
+
+			intMaxElm,ierr1 := strconv.ParseInt(maxElm.HashGen, 10, 64)
+			if ierr1 != nil {
+				fmt.Println(ierr1)
+			}
+
+			incIntMaxElm := intMaxElm+1
+
+			maxElm.HashGen = strconv.FormatInt(int64(incIntMaxElm),10)
+
+			maxElm.HashGen = "0" + maxElm.HashGen
+			maxElm.LongUrl = longUrl
+			insertHash(maxElm)
+
+			cur.Close(context.TODO())
+			return genereateHash(maxElm.HashGen)
+		} else {
+			fmt.Println("first Insert")
+			first := insertFirstHash(longUrl)
+			return genereateHash(first.HashGen)
 		}
-
-		cur.Close(context.TODO())
 	}
-
-	return hash
 }
 
-func genereateHash() string {
-	/*file, _ := ioutil.ReadFile("test.json")
+func genereateHash(req string) string {
 
-	data := CatlogNodes{}
+	charArr := strings.Split(req,"")
+	var res = ""
 
-	_ = json.Unmarshal([]byte(file), &data)
+	for j:=len(charArr)-1;j>=0;j=j-2{
+		var strToConv = charArr[j-1]+charArr[j]
+		res = encode(strToConv) + res
+	}
 
-	for i := 0; i < len(data.CatlogNodes); i++ {
-		fmt.Println("Product Id: ", data.CatlogNodes[i].Product_id)
-		fmt.Println("Quantity: ", data.CatlogNodes[i].Quantity)
-	}*/
+	return res
+}
 
-	return ""
+func encode(req string) string{
+	//Converting from numbers to Characters
+	data := readJsonCharMap()
+
+	var res = ""
+	for i := 0; i < len(data.CharMap); i++ {
+		if data.CharMap[i].Number==req{
+			res = data.CharMap[i].Character
+		}
+	}
+	return res
+}
+
+func readJsonCharMap() charMap{
+	file, err := ioutil.ReadFile("charMap.json")
+	if err != nil {
+		log.Fatal(err.Error())
+		return charMap{}
+	}
+	data := charMap{}
+
+	unmErr := json.Unmarshal([]byte(file), &data)
+	if unmErr != nil {
+		fmt.Println(unmErr)
+		return charMap{}
+	}
+
+	return data
+}
+
+func insertFirstHash(longUrl string) Record {
+
+	first := Record{
+		LongUrl:longUrl,
+		HashGen:"010101010101",
+	}
+	_,err := shortUrlsCollection.InsertOne(context.TODO(),first)
+	if err != nil{
+		fmt.Println(err)
+	}
+
+	return first
+}
+
+func insertHash(record Record) {
+	_,err := shortUrlsCollection.InsertOne(context.TODO(),record)
+	if err != nil{
+		fmt.Println(err)
+	}
 }
