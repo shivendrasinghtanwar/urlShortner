@@ -1,16 +1,16 @@
-package main
+package Structs
 
 type Record struct {
 	LongUrl string `json:"longUrl"`
 	HashGen string `json:"hash"`
 }
 
-type reqBody struct {
+type ReqBody struct {
 	LongUrl string `json:"longUrl"`
 }
 
 
-type resBody struct {
+type ResBody struct {
 	ShortUrl string `json:"shortUrl"`
 }
 
@@ -18,7 +18,7 @@ type mongoQuery struct {
 	HashGen string `json:"hashGen"`
 }
 
-type charMap struct{
+type CharMap struct{
 	CharMap []charNode `json:charMap`
 }
 

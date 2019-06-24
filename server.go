@@ -10,14 +10,11 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-
-	//"io/ioutil"
-
-	//"go.mongodb.org/mongo-driver/mongo"
-	//"go.mongodb.org/mongo-driver/mongo/options"
+	"urlShortner/Database"
+	"urlShortner/Structs"
 )
 
-var client = connectToMongo()
+var client = Database.ConnectToDB()
 var shortUrlsCollection = client.Database("BillteTest").Collection("shortUrls")
 
 func main() {
@@ -51,7 +48,7 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 		}
 
 
-		body := reqBody{}
+		body := Structs.ReqBody{}
 		decoder := json.NewDecoder(req.Body)
 
 		resErr := decoder.Decode(&body)
@@ -68,7 +65,7 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 
 		fmt.Println(body.LongUrl)
 
-		res := resBody{
+		res := Structs.ResBody{
 			ShortUrl:generateShortUrl(body.LongUrl),
 		}
 
@@ -107,9 +104,9 @@ func generateShortUrl(longUrl string) string {
 	}else {
 		var scur = cur
 		if scur.Next(context.TODO()) {
-			var results []*Record
-			var maxElm Record
-			var elem Record
+			var results []*Structs.Record
+			var maxElm Structs.Record
+			var elem Structs.Record
 
 			err := cur.Decode(&maxElm)
 			if err != nil {
@@ -155,13 +152,13 @@ func generateShortUrl(longUrl string) string {
 
 			maxElm.HashGen = "0" + maxElm.HashGen
 			maxElm.LongUrl = longUrl
-			insertHash(maxElm)
+			Database.InsertHash(maxElm)
 
 			cur.Close(context.TODO())
 			return genereateHash(maxElm.HashGen)
 		} else {
 			fmt.Println("first Insert")
-			first := insertFirstHash(longUrl)
+			first := Database.InsertFirstHash(longUrl)
 			return genereateHash(first.HashGen)
 		}
 	}
@@ -193,40 +190,22 @@ func encode(req string) string{
 	return res
 }
 
-func readJsonCharMap() charMap{
+func readJsonCharMap() Structs.CharMap {
 	file, err := ioutil.ReadFile("charMap.json")
 	if err != nil {
 		log.Fatal(err.Error())
-		return charMap{}
+		return Structs.CharMap{}
 	}
-	data := charMap{}
+	data := Structs.CharMap{}
 
 	unmErr := json.Unmarshal([]byte(file), &data)
 	if unmErr != nil {
 		fmt.Println(unmErr)
-		return charMap{}
+		return Structs.CharMap{}
 	}
 
 	return data
 }
 
-func insertFirstHash(longUrl string) Record {
 
-	first := Record{
-		LongUrl:longUrl,
-		HashGen:"010101010101",
-	}
-	_,err := shortUrlsCollection.InsertOne(context.TODO(),first)
-	if err != nil{
-		fmt.Println(err)
-	}
 
-	return first
-}
-
-func insertHash(record Record) {
-	_,err := shortUrlsCollection.InsertOne(context.TODO(),record)
-	if err != nil{
-		fmt.Println(err)
-	}
-}
