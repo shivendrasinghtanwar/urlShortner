@@ -4,18 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"urlShortner/Database"
-	"urlShortner/Structs"
+	. "urlShortner/Structs"
 )
-
-var client = Database.ConnectToDB()
-var shortUrlsCollection = client.Database("BillteTest").Collection("shortUrls")
 
 func main() {
 
@@ -35,7 +31,11 @@ func main() {
 
 func testHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("here")
-	//genereateHash()
+	var table = Database.FindAll()
+	i := len(table)
+	for j:=0;j<i;j++{
+		fmt.Println(genereateHash(table[j].HashGen))
+	}
 }
 
 func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
@@ -48,7 +48,7 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 		}
 
 
-		body := Structs.ReqBody{}
+		body := ReqBody{}
 		decoder := json.NewDecoder(req.Body)
 
 		resErr := decoder.Decode(&body)
@@ -65,7 +65,7 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 
 		fmt.Println(body.LongUrl)
 
-		res := Structs.ResBody{
+		res := ResBody{
 			ShortUrl:generateShortUrl(body.LongUrl),
 		}
 
@@ -90,77 +90,43 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 
 func generateShortUrl(longUrl string) string {
 
-	var verr = client.Ping(context.TODO(), nil)
+	var verr = Database.Client.Ping(context.TODO(), nil)
 	if verr != nil {
 		log.Fatal(verr)
 		return "no"
 	}
 
+	var allRecords = Database.FindAll()
+	totalRecords := len(allRecords)
+	if totalRecords==0 {
+		fmt.Println("first Insert")
+		first := Database.InsertFirstHash(longUrl)
+		return genereateHash(first.HashGen)
+	}else{
+		maxElem := allRecords[0]
 
-	cur,err1 := shortUrlsCollection.Find(context.TODO(), bson.D{{}})
-	if err1 != nil {
-		fmt.Println(err1)
-		return ""
-	}else {
-		var scur = cur
-		if scur.Next(context.TODO()) {
-			var results []*Structs.Record
-			var maxElm Structs.Record
-			var elem Structs.Record
-
-			err := cur.Decode(&maxElm)
-			if err != nil {
-				log.Fatal(err)
+		for _, value := range allRecords{
+			if value.HashGen>maxElem.HashGen{
+				maxElem = value
 			}
-			for cur.Next(context.TODO()) {
-
-				fmt.Println("got here2")
-				err := cur.Decode(&elem)
-				if err != nil {
-					log.Fatal(err)
-				}
-				intMaxElm,ierr1 := strconv.ParseInt(maxElm.HashGen,10,64)
-				if ierr1 != nil {
-					fmt.Println(ierr1)
-				}
-
-				intElem,ierr2 := strconv.ParseInt(elem.HashGen,10,64)
-				if ierr2 != nil {
-					fmt.Println(ierr2)
-				}
-
-				fmt.Println("got here")
-				fmt.Print(intMaxElm)
-				fmt.Print("   ")
-				fmt.Println(intElem)
-
-				if intMaxElm < intElem {
-					maxElm = elem
-				}
-
-				results = append(results, &elem)
-			}
-
-			intMaxElm,ierr1 := strconv.ParseInt(maxElm.HashGen, 10, 64)
-			if ierr1 != nil {
-				fmt.Println(ierr1)
-			}
-
-			incIntMaxElm := intMaxElm+1
-
-			maxElm.HashGen = strconv.FormatInt(int64(incIntMaxElm),10)
-
-			maxElm.HashGen = "0" + maxElm.HashGen
-			maxElm.LongUrl = longUrl
-			Database.InsertHash(maxElm)
-
-			cur.Close(context.TODO())
-			return genereateHash(maxElm.HashGen)
-		} else {
-			fmt.Println("first Insert")
-			first := Database.InsertFirstHash(longUrl)
-			return genereateHash(first.HashGen)
 		}
+
+		fmt.Println(maxElem.HashGen)
+
+		intMaxElm,ierr1 := strconv.ParseInt(maxElem.HashGen, 10, 64)
+		if ierr1 != nil {
+			fmt.Println(ierr1)
+		}
+
+		incIntMaxElm := intMaxElm+1
+
+		maxElem.HashGen = strconv.FormatInt(int64(incIntMaxElm),10)
+
+		maxElem.HashGen = "0" + maxElem.HashGen
+		maxElem.LongUrl = longUrl
+		Database.InsertHash(maxElem)
+
+		return genereateHash(maxElem.HashGen)
 	}
 }
 
@@ -190,18 +156,18 @@ func encode(req string) string{
 	return res
 }
 
-func readJsonCharMap() Structs.CharMap {
+func readJsonCharMap() CharMap {
 	file, err := ioutil.ReadFile("charMap.json")
 	if err != nil {
 		log.Fatal(err.Error())
-		return Structs.CharMap{}
+		return CharMap{}
 	}
-	data := Structs.CharMap{}
+	data := CharMap{}
 
 	unmErr := json.Unmarshal([]byte(file), &data)
 	if unmErr != nil {
 		fmt.Println(unmErr)
-		return Structs.CharMap{}
+		return CharMap{}
 	}
 
 	return data

@@ -3,14 +3,15 @@ package Database
 import (
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	. "urlShortner/Structs"
 )
 
-var client = ConnectToDB()
-var shortUrlsCollection = client.Database("BillteTest").Collection("shortUrls")
+var Client = ConnectToDB()
+var shortUrlsCollection = Client.Database("BillteTest").Collection("shortUrls")
 func ConnectToDB() *mongo.Client{
 	// Set client options
 
@@ -53,13 +54,31 @@ func InsertFirstHash(longUrl string) Record {
 	return first
 }
 
-func InsertHash(record Record) {
+func InsertHash(record *Record) {
 	_,err := shortUrlsCollection.InsertOne(context.TODO(),record)
 	if err != nil{
 		fmt.Println(err)
 	}
 }
-/*
-func findAll() (mongo.Cursor,error) {
-	return shortUrlsCollection.Find(context.TODO(), bson.D{{}})
-}*/
+
+func FindAll() []*Record {
+	var allRecords []*Record
+	cur,err := shortUrlsCollection.Find(context.TODO(), bson.D{{}})
+	if err!=nil{
+		return allRecords
+	}
+
+
+	for cur.Next(context.TODO()){
+		singleRecord := Record{}
+		err1 := cur.Decode(&singleRecord)
+		if err1 != nil {
+			fmt.Println(err1)
+			return allRecords
+		}
+
+		allRecords = append(allRecords, &singleRecord)
+	}
+
+	return allRecords
+}
