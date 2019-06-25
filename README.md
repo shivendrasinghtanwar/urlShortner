@@ -13,13 +13,25 @@ Clone the repo in the src folder of your Go Installation-
 
     git clone https://github.com/shivendrasinghtanwar/urlShortner.git
     
+Type the following command in your project directory to get all the dependencies
+
+    dep ensure
+    
+Now to run the app give - 
+
+    go run *.go
+    
+The Application starts running on - (For Now)
+
+    127.0.0.1:5000
+    
+ OR
+    
 Give the following command to build the app.
 
     go build .
     
-An executable file named 'urlShortner' will be formed, run it from the terminal.
+A single executable file named 'urlShortner' will be formed that can be then run from the terminal.
 
-The Application starts running on - (For Now)
 
-    127.0.0.1:5000
     
