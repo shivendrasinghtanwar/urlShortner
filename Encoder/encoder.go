@@ -35,3 +35,25 @@ func encode(req string) string{
 	}
 	return res
 }
+
+func GenerateNumberFromHashString(req string) string{
+	charArr := strings.Split(req,"")
+	var res = ""
+
+	for j:=len(charArr)-1;j>=0;j--{
+		var strToConv = charArr[j]
+		res = decode(strToConv) + res
+	}
+
+	return res
+}
+
+func decode(req string)string{
+	var res = ""
+	for i := 0; i < len(jsonData.CharMap); i++ {
+		if jsonData.CharMap[i].Character==req{
+			res = jsonData.CharMap[i].Number
+		}
+	}
+	return res
+}

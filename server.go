@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"urlShortner/Incrementor"
 	. "urlShortner/Models"
 	. "urlShortner/Structs"
 )
@@ -17,8 +16,8 @@ func main() {
 
 	mux := http.NewServeMux()
     mux.HandleFunc("/url/shorten",shortenUrlHandler)
-	mux.HandleFunc("/url/broaden",shortenUrlHandler)
-	mux.HandleFunc("/url/test",testHandler)
+	mux.HandleFunc("/url/broaden",broadenUrlHandler)
+	//mux.HandleFunc("/url/test",testHandler)
 
 
 	log.Printf("listening on port 5000")
@@ -30,7 +29,7 @@ func main() {
 
 }
 
-func testHandler(w http.ResponseWriter, req *http.Request) {
+/*func testHandler(w http.ResponseWriter, req *http.Request) {
 
 	elem := Record{
 		HashGen:"010126262626",
@@ -41,7 +40,7 @@ func testHandler(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-}
+}*/
 
 func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method == "POST" {
@@ -117,10 +116,8 @@ func broadenUrlHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		fmt.Println(body.HashGen)
-
 		res := BroadenUrlResBody{
-
+			LongUrl: GenerateLongUrl(body.HashGen),
 		}
 
 		jsonRes,objErr := json.Marshal(res)

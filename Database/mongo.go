@@ -82,3 +82,14 @@ func FindAll() []*Record {
 
 	return allRecords
 }
+
+func FindOneByHashNumber(hashGen string) Record{
+	filter := bson.D{{"hashgen", hashGen}}
+	var result = Record{}
+	err := shortUrlsCollection.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil {
+		fmt.Println(err)
+		return result
+	}
+	return result
+}
