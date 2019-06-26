@@ -31,3 +31,16 @@ type charNode struct{
 	Character string `json:"character"`
 	Number string `json:"number"`
 }
+
+type Config struct{
+	BillerFrontEndPath string `json:"billerFrontendPath"`
+	MonolithPath string `json:"monotlithPath"`
+	PayerFrontEndPath string `json:"payerFrontendPath"`
+	Mongo mongoConfig `json:"mongo"`
+}
+
+type mongoConfig struct{
+	Database string `json:"database"`
+	Collection string `json:"collection"`
+	MongoPath string `json:"mongo_path"`
+}

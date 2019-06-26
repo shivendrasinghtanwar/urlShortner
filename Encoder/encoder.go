@@ -2,7 +2,7 @@ package Encoder
 
 import (
 	"strings"
-	. "urlShortner/CharMapReader"
+	. "urlShortner/FileReader"
 )
 
 var jsonData = ReadJsonCharMap()
