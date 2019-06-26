@@ -73,6 +73,8 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 			ShortUrl: GenerateShortUrl(body.LongUrl),
 		}
 
+		res.ShortUrl = "https://billte.ch/r/"+res.ShortUrl
+
 		jsonRes,objErr := json.Marshal(res)
 		if objErr != nil {
 			http.Error(w, "Marshalling Failed", http.StatusInternalServerError)
@@ -93,45 +95,41 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func broadenUrlHandler(w http.ResponseWriter, req *http.Request) {
-	if req.Method == "POST" {
+	if req.Method == "GET" {
 
-		if req.Body == nil {
-			http.Error(w, "Error reading request body",
-				http.StatusInternalServerError)
+		shortUrl,keyErr :=  req.URL.Query()["shortUrl"]
+		if !keyErr {
+			http.Error(w,"Url is missing",http.StatusExpectationFailed)
 			return
 		}
 
+		fmt.Println(shortUrl[0])
 
-		body := BroadenUrlReqBody{}
-		decoder := json.NewDecoder(req.Body)
-
-		resErr := decoder.Decode(&body)
-		if resErr != nil {
-			http.Error(w, "Decoder Failed", http.StatusInternalServerError)
-			return
-		}
-
-		if body.HashGen=="" {
+		if shortUrl[0]=="" {
 			http.Error(w, "Wrong URL to parse", http.StatusInternalServerError)
 			return
 		}
 
 		res := BroadenUrlResBody{
-			LongUrl: GenerateLongUrl(body.HashGen),
+			LongUrl: GenerateLongUrl(shortUrl[0]),
 		}
 
-		jsonRes,objErr := json.Marshal(res)
+		res.LongUrl = res.LongUrl
+
+		/*jsonRes,objErr := json.Marshal(res)
 		if objErr != nil {
 			http.Error(w, "Marshalling Failed", http.StatusInternalServerError)
 			return
-		}
+		}*/
 
-		w.Header().Set("content-type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		http.Redirect(w, req, res.LongUrl,http.StatusMovedPermanently)
+
+		/*w.Header().Set("content-type", "application/json")
+
 		_,rerr := w.Write(jsonRes)
 		if rerr !=nil {
 			fmt.Println(rerr)
-		}
+		}*/
 
 
 	} else {

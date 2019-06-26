@@ -32,11 +32,9 @@ func GenerateShortUrl(longUrl string) string {
 			}
 		}
 
-		fmt.Println("Incrementor---------------->>")
-
+		fmt.Print("Incrementor---------------->>  ")
 		fmt.Println(Incrementor.AddOne(maxElem))
 
-		fmt.Println("ssssssssssssssssssssssssss")
 
 		maxElem.HashGen = Incrementor.AddOne(maxElem)
 		maxElem.LongUrl = longUrl
