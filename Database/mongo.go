@@ -7,15 +7,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	. "urlShortner/FileReader"
 	. "urlShortner/Structs"
 )
 
+var configuration = ReadConfig()
 var Client = ConnectToDB()
-var shortUrlsCollection = Client.Database("BillteTest").Collection("shortUrls")
+var shortUrlsCollection = Client.Database(configuration.Mongo.Database).Collection(configuration.Mongo.Collection)
 func ConnectToDB() *mongo.Client{
 	// Set client options
 
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI(configuration.Mongo.MongoPath))
 	if err != nil {
 		log.Fatal(err)
 	}

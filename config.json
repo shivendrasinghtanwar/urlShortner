@@ -1,0 +1,10 @@
+{
+  "billerFrontendPath": "",
+  "monotlithPath": "",
+  "payerFrontendPath": "",
+  "mongo": {
+    "database": "BillteTest",
+    "collection": "shortUrls",
+    "mongo_path": "mongodb://localhost:27017"
+  }
+}

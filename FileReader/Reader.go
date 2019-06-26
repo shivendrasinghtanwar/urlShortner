@@ -1,4 +1,4 @@
-package CharMapReader
+package FileReader
 
 import (
 	"encoding/json"
@@ -25,3 +25,21 @@ func ReadJsonCharMap() CharMap {
 	return data
 }
 
+func ReadConfig() Config {
+	data := Config{}
+	file, err := ioutil.ReadFile("config.json")
+	if err != nil {
+		log.Fatal(err.Error())
+		return data
+	}
+
+
+	unmErr := json.Unmarshal([]byte(file), &data)
+	if unmErr != nil {
+		fmt.Println(unmErr)
+		return data
+	}
+
+	return data
+
+}
