@@ -3,7 +3,7 @@
   "monotlithPath": "",
   "payerFrontendPath": "",
   "mongo": {
-    "database": "BillteTest",
+    "database": "SomeDatabase",
     "collection": "shortUrls",
     "mongo_path": "mongodb://localhost:27017"
   }
