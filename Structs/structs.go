@@ -5,6 +5,15 @@ type Record struct {
 	HashGen string `json:"hash"`
 }
 
+type BroadenUrlReqBody struct {
+	HashGen string `json:"shortUrl"`
+}
+
+type BroadenUrlResBody struct {
+	LongUrl string `json:"longUrl"`
+}
+
+
 type ReqBody struct {
 	LongUrl string `json:"longUrl"`
 }

@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"urlShortner/Database"
 	. "urlShortner/Encoder"
-
+	"urlShortner/Incrementor"
 )
 
 func GenerateShortUrl(longUrl string) string {
@@ -33,18 +32,13 @@ func GenerateShortUrl(longUrl string) string {
 			}
 		}
 
-		fmt.Println(maxElem.HashGen)
+		fmt.Println("Incrementor---------------->>")
 
-		intMaxElm,ierr1 := strconv.ParseInt(maxElem.HashGen, 10, 64)
-		if ierr1 != nil {
-			fmt.Println(ierr1)
-		}
+		fmt.Println(Incrementor.AddOne(maxElem))
 
-		incIntMaxElm := intMaxElm+1
+		fmt.Println("ssssssssssssssssssssssssss")
 
-		maxElem.HashGen = strconv.FormatInt(int64(incIntMaxElm),10)
-
-		maxElem.HashGen = "0" + maxElem.HashGen
+		maxElem.HashGen = Incrementor.AddOne(maxElem)
 		maxElem.LongUrl = longUrl
 		Database.InsertHash(maxElem)
 
