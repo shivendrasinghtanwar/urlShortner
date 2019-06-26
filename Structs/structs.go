@@ -33,6 +33,7 @@ type charNode struct{
 }
 
 type Config struct{
+	ShorturlHandlerPath string `json:"shortUrlHandlerPath"`
 	BillerFrontEndPath string `json:"billerFrontendPath"`
 	MonolithPath string `json:"monotlithPath"`
 	PayerFrontEndPath string `json:"payerFrontendPath"`

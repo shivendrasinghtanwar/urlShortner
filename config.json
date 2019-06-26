@@ -2,6 +2,7 @@
   "billerFrontendPath": "",
   "monotlithPath": "",
   "payerFrontendPath": "",
+  "shortUrlHandlerPath": "https://fatturadigitale.ch/r/",
   "mongo": {
     "database": "BillteTest",
     "collection": "shortUrls",

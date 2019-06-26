@@ -11,13 +11,13 @@ import (
 	. "urlShortner/Structs"
 )
 
-var configuration = ReadConfig()
+var Configuration = ReadConfig()
 var Client = ConnectToDB()
-var shortUrlsCollection = Client.Database(configuration.Mongo.Database).Collection(configuration.Mongo.Collection)
+var shortUrlsCollection = Client.Database(Configuration.Mongo.Database).Collection(Configuration.Mongo.Collection)
 func ConnectToDB() *mongo.Client{
 	// Set client options
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(configuration.Mongo.MongoPath))
+	client, err := mongo.NewClient(options.Client().ApplyURI(Configuration.Mongo.MongoPath))
 	if err != nil {
 		log.Fatal(err)
 	}

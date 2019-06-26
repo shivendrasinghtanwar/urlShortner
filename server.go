@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"urlShortner/Database"
 	. "urlShortner/Models"
 	. "urlShortner/Structs"
 
@@ -74,7 +75,7 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 			ShortUrl: GenerateShortUrl(body.LongUrl),
 		}
 
-		res.ShortUrl = "https://billte.ch/r/"+res.ShortUrl
+		res.ShortUrl = Database.Configuration.ShorturlHandlerPath+res.ShortUrl
 
 		jsonRes,objErr := json.Marshal(res)
 		if objErr != nil {
@@ -117,21 +118,7 @@ func broadenUrlHandler(w http.ResponseWriter, req *http.Request) {
 
 		res.LongUrl = res.LongUrl
 
-		/*jsonRes,objErr := json.Marshal(res)
-		if objErr != nil {
-			http.Error(w, "Marshalling Failed", http.StatusInternalServerError)
-			return
-		}*/
-
 		http.Redirect(w, req, res.LongUrl,http.StatusMovedPermanently)
-
-		/*w.Header().Set("content-type", "application/json")
-
-		_,rerr := w.Write(jsonRes)
-		if rerr !=nil {
-			fmt.Println(rerr)
-		}*/
-
 
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
