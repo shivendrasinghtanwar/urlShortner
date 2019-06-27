@@ -38,6 +38,7 @@ type Config struct{
 	MonolithPath string `json:"monotlithPath"`
 	PayerFrontEndPath string `json:"payerFrontendPath"`
 	Mongo mongoConfig `json:"mongo"`
+	StaticHtmlDirPath string `json:"staticHtmlDirPath"`
 }
 
 type mongoConfig struct{

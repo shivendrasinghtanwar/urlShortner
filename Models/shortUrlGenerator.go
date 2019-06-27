@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 	"urlShortner/Database"
 	. "urlShortner/Encoder"
 	"urlShortner/Incrementor"
 )
 
+var mutex sync.Mutex
 func GenerateShortUrl(longUrl string) string {
 
 	var verr = Database.Client.Ping(context.TODO(), nil)
@@ -32,14 +34,16 @@ func GenerateShortUrl(longUrl string) string {
 			}
 		}
 
-		fmt.Print("Incrementor---------------->>  ")
-		fmt.Println(Incrementor.AddOne(maxElem))
-
-
 		maxElem.HashGen = Incrementor.AddOne(maxElem)
 		maxElem.LongUrl = longUrl
-		Database.InsertHash(maxElem)
+
+
+		mutex.Lock()
+		maxElem = Database.InsertHash(maxElem)
+
+		mutex.Unlock()
 
 		return GenereateHashstringFromNumber(maxElem.HashGen)
 	}
 }
+

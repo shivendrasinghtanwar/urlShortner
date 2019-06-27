@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"urlShortner/Database"
 	. "urlShortner/Models"
 	. "urlShortner/Structs"
-
 )
 
 
@@ -18,9 +18,8 @@ func main() {
 
 	mux := http.NewServeMux()
     mux.HandleFunc("/url/shorten",shortenUrlHandler)
-	mux.HandleFunc("/url/broaden",broadenUrlHandler)
-	//mux.HandleFunc("/url/test",testHandler)
-
+	mux.HandleFunc("/r/",broadenUrlHandler)
+	mux.Handle("/",http.FileServer(http.Dir(Database.Configuration.StaticHtmlDirPath)))
 
 	log.Printf("listening on port 5000")
     err := http.ListenAndServe(":5000", mux)
@@ -30,19 +29,6 @@ func main() {
 
 
 }
-
-/*func testHandler(w http.ResponseWriter, req *http.Request) {
-
-	elem := Record{
-		HashGen:"010126262626",
-		LongUrl:"SomeUrl",
-	}
-
-	fmt.Println(Incrementor.AddOne(&elem))
-
-	w.Header().Set("content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-}*/
 
 func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method == "POST" {
@@ -69,14 +55,17 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		fmt.Println(body.LongUrl)
+		//fmt.Println(body.LongUrl)
 
 		res := ResBody{
 			ShortUrl: GenerateShortUrl(body.LongUrl),
 		}
 
+
 		res.ShortUrl = Database.Configuration.ShorturlHandlerPath+res.ShortUrl
 
+		fmt.Print("Short Url -")
+		fmt.Println(res.ShortUrl)
 		jsonRes,objErr := json.Marshal(res)
 		if objErr != nil {
 			http.Error(w, "Marshalling Failed", http.StatusInternalServerError)
@@ -99,26 +88,30 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 func broadenUrlHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method == "GET" {
 
-		shortUrl,keyErr :=  req.URL.Query()["shortUrl"]
-		if !keyErr {
-			http.Error(w,"Url is missing",http.StatusExpectationFailed)
-			return
-		}
+		shortUrl := strings.Split(req.URL.Path, "/")[2]
 
-		fmt.Println(shortUrl[0])
+		fmt.Print("Got short Url ---")
+		fmt.Println(shortUrl)
 
-		if shortUrl[0]=="" {
+		if shortUrl=="" {
 			http.Error(w, "Wrong URL to parse", http.StatusInternalServerError)
 			return
 		}
 
 		res := BroadenUrlResBody{
-			LongUrl: GenerateLongUrl(shortUrl[0]),
+			LongUrl: GenerateLongUrl(shortUrl),
 		}
 
-		res.LongUrl = res.LongUrl
-
 		http.Redirect(w, req, res.LongUrl,http.StatusMovedPermanently)
+
+	} else {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+	}
+}
+
+func serverIndexHandler(w http.ResponseWriter,req *http.Request) {
+	if req.Method == "GET" {
+		fmt.Println("got here")
 
 	} else {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)

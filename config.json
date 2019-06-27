@@ -7,5 +7,6 @@
     "database": "BillteTest",
     "collection": "shortUrls",
     "mongo_path": "mongodb://localhost:27017"
-  }
+  },
+  "staticHtmlDirPath": "/home/sunny/code"
 }

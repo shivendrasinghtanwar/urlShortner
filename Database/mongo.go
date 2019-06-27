@@ -8,6 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	. "urlShortner/FileReader"
+	"urlShortner/Incrementor"
+
 	. "urlShortner/Structs"
 )
 
@@ -56,11 +58,16 @@ func InsertFirstHash(longUrl string) Record {
 	return first
 }
 
-func InsertHash(record *Record) {
-	_,err := shortUrlsCollection.InsertOne(context.TODO(),record)
+func InsertHash(record *Record) *Record {
+	CheckInDatabaseBeforeInserting(record)
+
+	_, err := shortUrlsCollection.InsertOne(context.TODO(), record)
 	if err != nil{
 		fmt.Println(err)
 	}
+
+
+	return record
 }
 
 func FindAll() []*Record {
@@ -90,8 +97,20 @@ func FindOneByHashNumber(hashGen string) Record{
 	var result = Record{}
 	err := shortUrlsCollection.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
 		return result
 	}
 	return result
+}
+
+func CheckInDatabaseBeforeInserting(elem *Record) *Record{
+	//fmt.Println(elem.HashGen)
+	newRecord := FindOneByHashNumber(elem.HashGen)
+	if newRecord != (Record{}) {
+		fmt.Println("Added extra")
+		elem.HashGen = Incrementor.AddOne(elem)
+		CheckInDatabaseBeforeInserting(elem)
+	}
+
+	return elem
 }
