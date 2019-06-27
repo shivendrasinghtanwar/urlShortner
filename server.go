@@ -58,7 +58,7 @@ func shortenUrlHandler(w http.ResponseWriter, req *http.Request) {
 		decoder := json.NewDecoder(req.Body)
 
 		resErr := decoder.Decode(&body)
-		//resErr:= json.Unmarshal(req.Body,&body)
+
 		if resErr != nil {
 			http.Error(w, "Decoder Failed", http.StatusInternalServerError)
 			return

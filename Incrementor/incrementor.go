@@ -20,7 +20,7 @@ func AddOne(elem *Record) string {
 		}
 
 		if parseDigit == totalCharLength-1{
-			fmt.Println("here")
+			fmt.Println("Add Next one!")
 			hashCharArr = addOneInNextParseDigit(hashCharArr,i)
 			break
 		}
@@ -55,11 +55,11 @@ func addOneInNextParseDigit(hashCharArr []string,i int) []string{
 		fmt.Println(err)
 	}
 
-	fmt.Print("parse digit--->>>")
-	fmt.Println(parseDigit)
+	//fmt.Print("parse digit--->>>")
+	//fmt.Println(parseDigit)
 
 	if parseDigit == totalCharLength-1{
-		fmt.Println("here")
+		//fmt.Println("here")
 		hashCharArr = addOneInNextParseDigit(hashCharArr,i-2)
 		return hashCharArr
 	}
